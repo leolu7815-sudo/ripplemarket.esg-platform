@@ -34,14 +34,30 @@
     </button>
   </div>
 </header>
-<div class="page-title"><div><div class="eyebrow">讓好選擇，獲得好回饋</div><h1 id="heading">多一點綠，多一綠點</h1><p id="subtitle">從自備購物袋開始，讓每一次採買都更有意義。</p></div><span class="date-badge">✳ 永續生活進行中</span></div>
+<div class="page-title"><div class="page-title-copy"><div class="eyebrow">讓好選擇，獲得好回饋</div><h1 id="heading">多一點綠，多一綠點</h1><p id="subtitle">從自備購物袋開始，讓每一次採買都更有意義。</p></div><div id="news-slot" class="news-slot">
+  <a id="news-spotlight" class="news-spotlight" target="_blank" rel="noopener noreferrer" hidden>
+    <span class="news-megaphone" aria-hidden="true"><span class="megaphone-cone"></span><span class="megaphone-grip"></span><span class="megaphone-wave"></span></span>
+    <span class="news-copy"><small>永續新聞・每五天更新</small><strong id="news-headline"></strong><span id="news-source">來源：ESG遠見・全球趨勢 ↗</span></span>
+  </a>
+  <p id="news-status" class="news-status" role="status" aria-live="polite">正在讀取永續新聞…</p>
+</div><span class="date-badge">✳ 永續生活進行中</span></div>
 <section id="home" class="page">
 <div class="overview-grid">
-<div class="points-card"><div class="points-top"><span>✳ 我的綠色點數</span><span class="pill">綠芽會員</span></div><div class="balance"><strong id="balance">150</strong><span>點</span></div><p>每一點，都是更美好生活的累積。</p><div class="points-bottom"><span>2點即一元</span><button id="convert-points">通用點數轉換 <span>↗</span></button></div><div class="card-plant">✳</div></div>
+<div class="points-card">
+  <img class="points-swan" src="天鵝.png" alt="" aria-hidden="true">
+  <div class="points-content">
+    <div class="points-top"><span>✳ 我的綠色點數</span><span class="pill">綠芽會員</span></div>
+    <div class="balance"><strong id="balance">150</strong><span>點</span></div>
+    <p>每一點，都是更美好生活的累積。</p>
+    <div class="points-bottom"><span>2點即一元</span><button id="convert-points">通用點數轉換 <span>↗</span></button></div>
+  </div>
+</div>
 <section class="donation-card" aria-labelledby="donation-heading">
   <div class="donation-card-heading"><h2 id="donation-heading">你的影響力</h2><button id="refresh-donations" type="button" aria-label="重新讀取捐贈紀錄">↻ 重新讀取</button></div>
+  <div class="donation-summary">
   <div class="donation-number"><strong id="donation-total">—</strong><span>元</span></div>
   <p class="donation-caption">累計已捐贈的消費回饋提撥金額</p>
+  </div>
   <div id="donation-breakdown" class="donation-breakdown"></div>
   <p id="donation-status" class="donation-status" role="status" aria-live="polite">正在讀取捐贈紀錄…</p>
   <p class="donation-note">依已完成的實際捐贈紀錄累計。</p>
@@ -133,6 +149,7 @@
 </dialog>
 </body>
 </html>
+
 
 
 

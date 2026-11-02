@@ -136,6 +136,7 @@ function notify(message) {
 function showPage(page) {
   if (!Object.hasOwn(labels, page)) throw new Error('找不到指定頁面，請由選單重新選擇。');
   log('切換頁面', { page });
+  required('#news-slot').hidden = page !== 'home';
   document.querySelectorAll('.page').forEach(section => section.hidden = section.id !== page);
   document.querySelectorAll('.nav-item').forEach(button => button.classList.toggle('active', button.dataset.page === page));
   required('#page-label').textContent = labels[page][0];
@@ -297,7 +298,7 @@ async function requestProfile(method, profile, view = 'profile') {
   const timer = setTimeout(() => controller.abort(), 15000);
   log('準備連線至基礎資料雲端', { method });
   try {
-    const response = await fetch(questionnaireUrl + (view === 'donations' ? '?view=donations' : ''), {
+    const response = await fetch(questionnaireUrl + (['donations', 'news'].includes(view) ? '?view=' + view : ''), {
       method,
       headers: { 'Content-Type': 'application/json', 'X-Profile-Token': token },
       body: profile ? JSON.stringify(profile) : undefined,
@@ -308,6 +309,10 @@ async function requestProfile(method, profile, view = 'profile') {
     log('收到基礎資料雲端回應', { method, status: response.status });
     if (!response.ok) throw new Error('雲端暫時無法完成操作，請稍後重試。');
     const data = await response.json();
+    if (view === 'news') {
+      if (!object(data) || !validSpotlight(data.news) || typeof data.stale !== 'boolean') throw new Error('新聞資料回應不完整。');
+      return { ...data.news, stale: data.stale };
+    }
     if (view === 'donations') {
       if (!object(data) || !Array.isArray(data.donations)) throw new Error('捐贈紀錄回應不完整，請重試。');
       return data.donations;
@@ -511,7 +516,65 @@ function showOwnedReward(code) {
   openModal('<span class="modal-icon">🎁</span><h2>' + safeText(item.title) + '</h2><p>類別 ' + (item.type === 'discount' ? '優惠券' : '兌換物') + '<br>兌換時間 ' + safeText(item.date) + '<br>已使用 ' + Math.abs(item.amount).toLocaleString() + ' 點</p><div class="owned-code">兌換碼 <strong>' + safeText(item.code) + '</strong></div><p>體驗兌換碼不具實際效力。</p><div class="modal-actions"><button data-close>關閉</button></div>');
 }
 
+// 新聞由雲端抽選並固定五天，裝置快取沿用相同的到期時間。
+const newsCacheKey = '泉漣永續新聞';
+const newsDuration = 5 * 24 * 60 * 60 * 1000;
+let spotlightNews = null;
+let spotlightLoading = false;
+let newsRefreshTimer;
+function validSpotlight(news) {
+  return object(news) && typeof news.title === 'string' && news.title.trim().length > 0 && news.title.length <= 300 && typeof news.url === 'string' && /^https:\/\/esg\.gvm\.com\.tw\/article\/\d+$/.test(news.url) && Number.isFinite(Date.parse(news.picked_at)) && Date.parse(news.expires_at) - Date.parse(news.picked_at) === newsDuration;
+}
+function renderSpotlight() {
+  const link = required('#news-spotlight');
+  const status = required('#news-status');
+  if (!spotlightNews) { link.hidden = true; return; }
+  required('#news-headline').textContent = spotlightNews.title;
+  required('#news-source').textContent = spotlightNews.stale ? '來源：ESG遠見・更新延遲，顯示上次新聞 ↗' : '來源：ESG遠見・全球趨勢 ↗';
+  link.href = spotlightNews.url;
+  link.setAttribute('aria-label', '閱讀新聞：' + spotlightNews.title + '（另開分頁）');
+  link.hidden = false;
+  status.textContent = '';
+}
+function scheduleNewsRefresh() {
+  clearTimeout(newsRefreshTimer);
+  const delay = spotlightNews && !spotlightNews.stale ? Math.max(1000, Date.parse(spotlightNews.expires_at) - Date.now()) : 5 * 60 * 1000;
+  newsRefreshTimer = setTimeout(() => guard('新聞自動更新', loadSpotlight), delay);
+}
+async function loadSpotlight() {
+  if (spotlightLoading) return;
+  if (!spotlightNews) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(newsCacheKey));
+      if (validSpotlight(cached)) spotlightNews = cached;
+    } catch { log('新聞快取無法讀取，改從雲端取得'); }
+  }
+  if (spotlightNews && !spotlightNews.stale && Date.parse(spotlightNews.expires_at) > Date.now()) {
+    renderSpotlight(); scheduleNewsRefresh(); return;
+  }
+  spotlightLoading = true;
+  if (spotlightNews) { spotlightNews.stale = true; renderSpotlight(); }
+  else required('#news-status').textContent = '正在讀取永續新聞…';
+  try {
+    spotlightNews = await requestProfile('GET', undefined, 'news');
+    renderSpotlight();
+    try { localStorage.setItem(newsCacheKey, JSON.stringify(spotlightNews)); }
+    catch { log('新聞已載入，裝置暫時無法保存新聞快取'); }
+  } catch {
+    if (spotlightNews) renderSpotlight();
+    else required('#news-status').textContent = '新聞暫時無法讀取，稍後會再試。';
+    log('永續新聞暫時無法更新');
+  } finally {
+    spotlightLoading = false;
+    scheduleNewsRefresh();
+  }
+}
+on(document, 'visibilitychange', '檢查新聞更新時間', () => {
+  if (!document.hidden && (!spotlightNews || spotlightNews.stale || Date.parse(spotlightNews.expires_at) <= Date.now())) return loadSpotlight();
+});
+
 guard('首次顯示', render);
+guard('讀取永續新聞', loadSpotlight);
 guard('讀取捐贈紀錄', loadDonations);
 if (startupMessage) showError(startupMessage);
 

@@ -87,3 +87,53 @@ dialog .questionnaire-status{font-size:12px;line-height:1.8;color:#28735a}
 @media(max-width:950px){.about-cards{grid-template-columns:1fr}}
 @media(max-width:760px){nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.nav-item{border-radius:8px;padding:12px 6px;font-size:11px}.about-shortcuts{gap:10px}.about-shortcuts button{padding:15px 12px}.about-shortcuts small{font-size:10px}.about-panel{padding:20px}.wallet-grid{grid-template-columns:1fr}.about-tabs button,.wallet-tabs button{padding:9px 13px;font-size:12px}}
 @media(max-width:420px){nav{grid-template-columns:repeat(2,minmax(0,1fr))}.about-shortcuts{grid-template-columns:1fr}.about-shortcuts button>span{float:right;margin:0}.about-shortcuts button{padding:17px}}
+
+/* 總覽上下排列兩張橫幅；完整天鵝圖與延伸背景分層呈現。 */
+.overview-grid{grid-template-columns:minmax(0,1fr);gap:22px}
+.points-card{position:relative;isolation:isolate;min-width:0;min-height:270px;padding:0;background:#a7b7a1}
+.points-card::before{content:"";position:absolute;inset:-20px;z-index:-2;background:url("天鵝.png") center/cover no-repeat;filter:blur(18px)}
+.points-card::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(90deg,rgba(20,53,40,.94),rgba(20,53,40,.76) 37%,rgba(20,53,40,.15) 75%)}
+.points-swan{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:right center;z-index:-1;pointer-events:none}
+.points-content{position:relative;z-index:1;width:57%;padding:29px 34px}
+.points-content .points-top{gap:15px;flex-wrap:wrap}
+.points-content .balance{margin-top:12px}.points-content .balance strong{font-size:60px}
+.points-content>p{font-size:11px;line-height:1.8;color:#e0ebdc;margin:2px 0 19px}
+.points-card .points-bottom{gap:14px;flex-wrap:wrap;border-top-color:rgba(223,238,216,.35)}
+.points-card .points-bottom>span{color:#e0ebdc}.points-card .pill{background:rgba(24,61,44,.65);color:#eef4e6}
+/* 捐贈總額在左，各機構金額橫向排列在右。 */
+.donation-card{display:grid;grid-template-columns:minmax(180px,.7fr) minmax(0,2fr);gap:0 26px;padding:25px 30px}
+.donation-card-heading{grid-column:1/-1;margin-bottom:19px}
+.donation-summary{min-width:0;align-self:center}.donation-summary .donation-number{margin-top:0}.donation-caption{line-height:1.8;margin:5px 0 0}
+.donation-breakdown{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px;border-top:0;border-left:1px solid var(--line);padding-left:26px;min-width:0;align-items:center}
+.donation-row{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:0;font-size:11px;min-width:0}
+.donation-row>span{min-height:3.2em;line-height:1.6;overflow-wrap:anywhere}.donation-row>strong{font-size:18px;line-height:1.5;text-align:left;min-width:0;max-width:100%;overflow-wrap:anywhere}
+.donation-status,.donation-note{grid-column:1/-1}.donation-status{margin-top:19px}
+@media(max-width:1150px) and (min-width:761px){.donation-breakdown{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:20px}.donation-row>span{min-height:0}.points-content{width:63%;padding:28px}}
+@media(max-width:760px){
+  .points-card{min-height:255px}.points-content{width:100%;padding:24px}.points-content .points-top{justify-content:flex-start;gap:18px}.points-content .balance strong{font-size:54px}
+  .points-card::after{background:linear-gradient(90deg,rgba(20,53,40,.92),rgba(20,53,40,.72) 40%,rgba(20,53,40,.2))}
+  .points-card .points-bottom{max-width:380px}.points-content>p{max-width:72%}
+  .donation-card{padding:21px;grid-template-columns:minmax(0,1fr);gap:17px}.donation-card-heading{margin-bottom:0}.donation-summary{display:flex;align-items:center;gap:20px}.donation-caption{max-width:180px;margin:0}
+  .donation-breakdown{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 14px;border-left:0;border-top:1px solid var(--line);padding:18px 0 0}.donation-row{gap:7px}.donation-row>span{font-size:11px;min-height:3.2em}.donation-row>strong{font-size:17px}.donation-status,.donation-note{margin:0}
+}
+@media(max-width:420px){.points-content{padding:21px}.points-content>p{max-width:85%}.points-card .points-bottom button{padding:10px}.donation-breakdown{grid-template-columns:repeat(2,minmax(0,1fr))}.donation-row>span{min-height:0}}
+
+/* 左側選單採淡青綠底色，選中項目加深以便辨識。 */
+.sidebar{background:#edf6e9;border-right-color:#dce9d5}
+.sidebar .nav-item.active{background:#d6e8cc;color:#244e3d}
+
+
+
+/* 標語右側的新聞入口，大聲公與標題連結至同一篇報導。 */
+.page-title{gap:24px}.page-title-copy{min-width:0;flex-shrink:0}
+.news-slot{flex:1;min-width:0;max-width:440px;margin-left:auto}
+.news-spotlight{display:flex;align-items:center;gap:13px;color:#286743;padding:10px 0}
+.news-copy{display:flex;flex-direction:column;gap:5px;min-width:0}.news-copy small{color:#829b72;font-size:10px;letter-spacing:1px}.news-copy strong{font-size:13px;line-height:1.7;font-weight:600;overflow-wrap:anywhere}.news-copy>span{font-size:9px;line-height:1.6;color:#8c9680}
+.news-spotlight:hover .news-copy strong{text-decoration:underline;text-underline-offset:4px}
+.news-megaphone{display:block;position:relative;flex-shrink:0;width:41px;height:38px;color:#39864e}
+.megaphone-cone{position:absolute;left:2px;top:3px;width:27px;height:24px;background:currentColor;clip-path:polygon(0 35%,100% 0,100% 100%,0 65%);border-radius:2px}
+.megaphone-grip{position:absolute;left:11px;top:23px;width:6px;height:12px;border-radius:2px;background:currentColor;transform:rotate(-18deg)}
+.megaphone-wave{position:absolute;right:1px;top:6px;width:9px;height:19px;border-right:2px solid currentColor;border-radius:0 100% 100% 0}
+.page-title .news-status{font-size:11px;line-height:1.8;color:#89947e;margin:0}
+@media(max-width:1200px){.page-title{flex-wrap:wrap}.news-slot{max-width:none}.page-title-copy{flex-shrink:1}.news-copy strong{font-size:12px}.date-badge{display:none}}
+@media(max-width:760px){.page-title{gap:14px}.page-title-copy{width:100%}.news-slot{flex-basis:100%;margin-left:0}.news-spotlight{padding:2px 0}.news-copy strong{font-size:13px}.news-copy>span{font-size:10px}}
