@@ -14,35 +14,131 @@
 <p class="nav-label">我的綠色生活</p>
 <nav aria-label="主要選單">
 <button class="nav-item active" data-page="home"><span>▦</span>點數總覽</button>
-<button class="nav-item" data-page="tasks"><span>♧</span>永續任務<span class="nav-count">3</span></button>
+<button class="nav-item" data-page="about"><span>♧</span>關於泉漣</button>
 <button class="nav-item" data-page="rewards"><span>♧</span>適用商品範疇</button>
 <button class="nav-item" data-page="history"><span>◷</span>點數紀錄</button>
+<button class="nav-item" data-page="wallet"><span>▤</span>我的兌換商品</button>
 </nav>
 <div class="sidebar-note"><span>🌱</span><strong>小小選擇，大大改變</strong><p>每一點綠色點數，都是你<br>為地球留下的溫柔足跡。</p><div class="note-line"></div><small>一起讓永續，成為日常。</small></div>
 <div class="profile"><div class="avatar">林</div><div><strong>林小青</strong><small>泉漣綠生活會員</small></div><span class="member-dot">●</span></div>
 </aside>
 <main>
-<header><div class="breadcrumb">我的綠色生活 <span>／</span> <b id="page-label">點數總覽</b></div><button class="help" id="help">ⓘ <span>點數使用說明</span></button></header>
-<div class="page-title"><div><div class="eyebrow">讓好選擇，獲得好回饋</div><h1 id="heading">今天，也為地球加一點綠。</h1><p id="subtitle">從自備購物袋開始，讓每一次採買都更有意義。</p></div><span class="date-badge">✳ 永續生活進行中</span></div>
+<div id="app-error" class="app-error" role="alert" hidden></div>
+<header>
+  <div class="breadcrumb">我的綠色生活 <span>／</span> <b id="page-label">點數總覽</b></div>
+  <div class="header-actions">
+    <button class="help" id="help">ⓘ <span>點數使用說明</span></button>
+    <button class="questionnaire-button" id="open-questionnaire" type="button" aria-label="開啟基礎資料" aria-haspopup="dialog" aria-controls="birthday-dialog" title="基礎資料">
+      <span class="questionnaire-icon" aria-hidden="true"><span></span></span>
+      <span class="questionnaire-label">基礎資料</span>
+    </button>
+  </div>
+</header>
+<div class="page-title"><div><div class="eyebrow">讓好選擇，獲得好回饋</div><h1 id="heading">多一點綠，多一綠點</h1><p id="subtitle">從自備購物袋開始，讓每一次採買都更有意義。</p></div><span class="date-badge">✳ 永續生活進行中</span></div>
 <section id="home" class="page">
 <div class="overview-grid">
-<div class="points-card"><div class="points-top"><span>✳ 我的綠色點數</span><span class="pill">綠芽會員</span></div><div class="balance"><strong id="balance">150</strong><span>點</span></div><p>每一點，都是更美好生活的累積。</p><div class="points-bottom"><span>每 2 點可折抵 1 元</span><button data-goto="rewards">立即兌換 <span>↗</span></button></div><div class="card-plant">✳</div></div>
-<div class="impact-card"><span class="section-kicker">你的選擇，正在改變世界</span><h2>綠色影響力 <span>↗</span></h2><div class="impact-number"><strong id="impact">12.8</strong><span>公斤</span></div><p>累積減碳量 <span class="info-dot" title="示範估算：每完成一次永續任務增加 0.2 公斤">ⓘ</span></p><div class="impact-footer"><span>🌳</span><p>讓好習慣慢慢長大<br><strong>每一步，都算數。</strong></p></div></div>
+<div class="points-card"><div class="points-top"><span>✳ 我的綠色點數</span><span class="pill">綠芽會員</span></div><div class="balance"><strong id="balance">150</strong><span>點</span></div><p>每一點，都是更美好生活的累積。</p><div class="points-bottom"><span>2點即一元</span><button id="convert-points">通用點數轉換 <span>↗</span></button></div><div class="card-plant">✳</div></div>
+<section class="donation-card" aria-labelledby="donation-heading">
+  <div class="donation-card-heading"><h2 id="donation-heading">你的影響力</h2><button id="refresh-donations" type="button" aria-label="重新讀取捐贈紀錄">↻ 重新讀取</button></div>
+  <div class="donation-number"><strong id="donation-total">—</strong><span>元</span></div>
+  <p class="donation-caption">累計已捐贈的消費回饋提撥金額</p>
+  <div id="donation-breakdown" class="donation-breakdown"></div>
+  <p id="donation-status" class="donation-status" role="status" aria-live="polite">正在讀取捐贈紀錄…</p>
+  <p class="donation-note">依已完成的實際捐贈紀錄累計。</p>
+</section>
 </div>
-<div class="section-header"><div><h2>把日常，變成綠色任務 <span class="tiny-badge">每日好習慣</span></h2><p>完成一件小事，收穫一點綠色回饋。</p></div><button class="text-link" data-goto="tasks">查看全部任務 ↗</button></div>
-<div class="task-grid" id="home-tasks"></div>
+<div class="section-header"><div><h2>關於泉漣</h2><p>了解我們的永續方向與資訊公開規劃。</p></div><button class="text-link" data-goto="about">了解更多 ↗</button></div>
+<div class="about-shortcuts">
+  <button data-about="goals"><span>◎</span><strong>預期目標</strong><small>看見我們的未來方向 ↗</small></button>
+  <button data-about="actions"><span>♧</span><strong>永續作為</strong><small>讓永續走進日常 ↗</small></button>
+  <button data-about="reports"><span>▤</span><strong>永續報告書</strong><small>透明分享每一步 ↗</small></button>
+</div>
 <div class="section-header"><div><h2>適用商品範疇</h2><p>對自己好，也對地球好。</p></div><button class="text-link" data-goto="rewards">查看適用商品 ↗</button></div>
 <div class="reward-grid" id="home-rewards"></div>
 <div class="bottom-banner"><span>✳</span><div><strong>你的每一個選擇，都有綠色的力量。</strong><p>少一點浪費，多一點珍惜。和泉漣一起，把永續帶進生活裡。</p></div><span class="banner-end">一起泉漣，一起更好 ↗</span></div>
 </section>
-<section id="tasks" class="page" hidden><div class="section-header"><p>每日各任務可領取一次。本頁為互動示範，無須提供購物憑證。</p></div><div class="task-grid" id="all-tasks"></div></section>
+<section id="about" class="page" hidden>
+  <div class="about-tabs" role="tablist" aria-label="關於泉漣子欄位">
+    <button id="about-tab-goals" role="tab" aria-controls="about-goals" aria-selected="true" data-about="goals" class="active">預期目標</button>
+    <button id="about-tab-actions" role="tab" aria-controls="about-actions" aria-selected="false" tabindex="-1" data-about="actions">永續作為</button>
+    <button id="about-tab-reports" role="tab" aria-controls="about-reports" aria-selected="false" tabindex="-1" data-about="reports">永續報告書</button>
+  </div>
+  <div class="about-panel" id="about-goals" role="tabpanel" aria-labelledby="about-tab-goals">
+    <span class="section-kicker">為未來，多想一步</span><h2>預期目標</h2><p>以下為目標規劃方向，量化目標與達成期限待確認後公布。</p>
+    <div class="about-cards"><article><h3>減少一次性包裝</h3><p>評估減塑措施與可重複使用包裝的應用。</p><span>規劃中</span></article><article><h3>推廣友善環境商品</h3><p>規劃在地、當季與永續商品的採購方向。</p><span>規劃中</span></article><article><h3>讓回饋延伸善意</h3><p>規劃串接消費回饋提撥與捐贈紀錄追蹤。</p><span>規劃中</span></article></div>
+  </div>
+  <div class="about-panel" id="about-actions" role="tabpanel" aria-labelledby="about-tab-actions" hidden>
+    <span class="section-kicker">從日常選擇開始</span><h2>永續作為</h2><p>以下為永續方向規劃，實際執行情形待確認後公布。</p>
+    <div class="about-cards"><article><h3>減塑與重複使用</h3><p>推廣自備購物袋，評估降低一次性用品使用。</p></article><article><h3>在地與當季食材</h3><p>規劃支持在地供應，讓食材與生活更靠近。</p></article><article><h3>惜食與資源珍惜</h3><p>評估惜食推廣與庫存管理，減少食物浪費。</p></article></div>
+  </div>
+  <div class="about-panel" id="about-reports" role="tabpanel" aria-labelledby="about-tab-reports" hidden>
+    <span class="section-kicker">公開資訊，累積信任</span><h2>永續報告書</h2><div class="about-report"><span aria-hidden="true">▤</span><h3>永續報告書尚未公布</h3><p>正式報告完成後，將於此處提供年度、內容摘要與下載連結。</p></div>
+  </div>
+</section>
 <section id="rewards" class="page" hidden><div class="filter-row"><button class="filter active" data-filter="all">全部商品</button><button class="filter" data-filter="discount">購物折抵</button><button class="filter" data-filter="goods">永續選物</button></div><div class="reward-grid" id="all-rewards"></div></section>
 <section id="history" class="page" hidden><div class="history-card"><div class="history-head"><h2>我的點數足跡</h2><span>點數與兌換紀錄</span></div><div id="history-list"></div></div></section>
+<section id="wallet" class="page" hidden>
+  <div class="wallet-summary"><span>優惠券 <strong id="wallet-coupon-count">0</strong> 張</span><span>兌換物 <strong id="wallet-goods-count">0</strong> 件</span></div>
+  <div class="wallet-tabs" role="group" aria-label="兌換商品分類">
+    <button class="active" data-wallet="all" aria-pressed="true">全部</button>
+    <button data-wallet="discount" aria-pressed="false">優惠券</button>
+    <button data-wallet="goods" aria-pressed="false">兌換物</button>
+  </div>
+  <div id="wallet-list" class="wallet-grid"></div>
+  <p class="wallet-note">目前為體驗版，兌換碼不具實際效力。商品保存在此瀏覽器的兌換紀錄中。</p>
+</section>
 <footer><span class="footer-brand"><span class="brand-icon" aria-hidden="true"><span class="water-drop"></span><span class="water-ripple"></span></span>泉漣生鮮</span><p>讓新鮮與永續，一起走進日常。</p><small>體驗版・資料僅儲存在此瀏覽器，優惠券無實際效力</small></footer>
 </main>
 <dialog id="modal"><button class="close" aria-label="關閉">×</button><div id="modal-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="birthday-dialog" aria-labelledby="birthday-title" aria-describedby="birthday-description">
+  <button class="birthday-close" id="close-birthday" type="button" aria-label="關閉基礎資料">×</button>
+  <span class="modal-icon" aria-hidden="true">☷</span>
+  <h2 id="birthday-title">基礎資料</h2>
+  <p id="birthday-description">請填寫你的西元生日，以及希望接受消費回饋提撥 1% 捐贈的慈善機構。</p>
+  <form id="questionnaire-form">
+    <fieldset class="birthday-fields" id="birthday-fields">
+      <legend>出生年月日</legend>
+      <div class="birthday-inputs">
+        <label for="birthday-year">西元年
+          <input id="birthday-year" name="birth-year" type="number" min="1900" step="1" placeholder="例如 1995" inputmode="numeric" autocomplete="bday-year" required>
+        </label>
+        <label for="birthday-month">月
+          <input id="birthday-month" name="birth-month" type="number" min="1" max="12" step="1" placeholder="月份" inputmode="numeric" autocomplete="bday-month" required>
+        </label>
+        <label for="birthday-day">日
+          <input id="birthday-day" name="birth-day" type="number" min="1" max="31" step="1" placeholder="日期" inputmode="numeric" autocomplete="bday-day" required>
+        </label>
+      </div>
+    </fieldset>
+    <label class="charity-field" for="charity-name">欲連結的慈善機構
+      <select id="charity-name" name="charity-name" aria-describedby="donation-description" required>
+        <option value="" disabled selected>請選擇慈善機構</option>
+        <option value="台灣流浪動物救援協會">台灣流浪動物救援協會</option>
+        <option value="家扶基金會">家扶基金會</option>
+        <option value="台灣世界展望會">台灣世界展望會</option>
+        <option value="伊甸社會福利基金會">伊甸社會福利基金會</option>
+        <option value="創世社會福利基金會">創世社會福利基金會</option>
+      </select>
+    </label>
+    <p id="donation-description" class="donation-description">消費回饋提撥比例為 1%，用於捐贈給你填寫的慈善機構。</p>
+    <p class="questionnaire-note">按下儲存後，生日與捐贈偏好將傳送至泉漣的雲端資料庫，並以此瀏覽器識別資料。實際捐款提撥功能尚待串接。</p>
+    <p id="questionnaire-status" class="questionnaire-status" role="status" aria-live="polite"></p>
+    <p id="questionnaire-error" class="form-error" role="alert"></p>
+    <div class="modal-actions">
+      <button id="cancel-birthday" type="button">稍後填寫</button>
+      <button id="save-profile" type="submit" class="primary">儲存至雲端</button>
+    </div>
+  </form>
+</dialog>
 </body>
 </html>
+
+
+
+
+
+
 
 
 

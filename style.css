@@ -10,3 +10,80 @@
 .footer-brand .brand-icon{width:27px;height:30px;transform:scale(.75);transform-origin:center;margin:-4px}
 @media(max-width:760px){.nav-item{font-size:10px;gap:4px}.nav-item[data-page="rewards"]{flex:1.35}.nav-item{flex:1}}
 
+
+/* 轉換視窗同時顯示餘額與預覽，確認前可自行修改數量。 */
+.conversion-balance{display:flex;justify-content:space-between;align-items:center;background:#edf2e7;border-radius:10px;padding:18px;margin:18px 0 10px;font-size:12px}
+.conversion-balance strong{font-size:28px}.conversion-balance small{font-size:12px;font-weight:400}
+dialog .conversion-note{font-size:11px;line-height:1.7;color:#8a927f}
+#conversion-form{margin-top:22px}#conversion-form label{display:block;font-size:13px;margin-bottom:10px}
+.conversion-input{display:flex;gap:8px}.conversion-input input{width:100%;min-width:0;padding:13px 12px;border:1px solid #cdd9c4;border-radius:8px;background:white;font:inherit;color:var(--green)}
+.conversion-input input:focus{outline:2px solid #279b8d;outline-offset:2px}
+.conversion-input button{flex-shrink:0;background:#edf2e7;border:0;border-radius:8px;color:var(--green);padding:0 12px;font-size:12px}
+.conversion-input button:disabled{opacity:.5;cursor:not-allowed}
+.conversion-preview{background:#f3f4eb;border-radius:8px;padding:14px;font-size:12px;line-height:1.9;min-height:70px}
+
+
+
+/* 綠色問卷圖示以純樣式繪製，維持三個檔案的結構。 */
+.header-actions{display:flex;align-items:center;gap:19px}
+.questionnaire-button{display:flex;align-items:center;gap:8px;border:1px solid #cfe1d3;background:#eaf3e8;border-radius:8px;padding:8px 11px;color:#28735a;font-size:11px}
+.questionnaire-icon{display:inline-block;position:relative;width:16px;height:19px;border:1.7px solid currentColor;border-radius:3px;flex-shrink:0}
+.questionnaire-icon::before{content:"";position:absolute;top:-3px;left:3px;width:7px;height:4px;background:#eaf3e8;border:1.5px solid currentColor;border-radius:2px}
+.questionnaire-icon span{position:absolute;width:8px;height:2px;background:currentColor;left:2px;top:6px;box-shadow:0 4px currentColor,0 8px currentColor}
+.birthday-fields{padding:0;border:0;margin:22px 0}.birthday-fields legend{font-size:13px;font-weight:600}
+.birthday-inputs{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;margin-top:12px}
+.birthday-inputs label{font-size:11px;color:#7b8770}
+#questionnaire-form input{display:block;width:100%;min-width:0;background:#fff;border:1px solid #cdd9c4;border-radius:8px;padding:12px 10px;font:inherit;color:var(--green);margin-top:8px}
+#questionnaire-form input:focus{outline:2px solid #279b8d;outline-offset:2px}
+
+dialog .questionnaire-note{font-size:11px;margin-top:18px;line-height:1.8}
+dialog .form-error{font-size:12px;color:#b45e3c;line-height:1.7;margin-bottom:0}.form-error:empty{display:none}
+@media(max-width:760px){.header-actions{gap:10px}.questionnaire-label{display:inline}.questionnaire-button{padding:8px}.birthday-inputs{gap:7px}}
+
+/* 錯誤提示會持續顯示，不讓重要訊息隨短暫通知消失。 */
+.app-error{position:relative;margin:18px 0;padding:15px 18px;background:#fff0e8;border:1px solid #e5ba9d;border-radius:10px;color:#945435;font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+.empty-state{padding:24px;color:var(--muted);font-size:13px;text-align:center}
+
+/* 生日問卷的關閉鍵固定在視窗右上角。 */
+.birthday-close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:25px;color:#7c8870}
+
+/* 機構欄位與捐贈比例一起顯示，方便確認回饋偏好。 */
+.charity-field{display:block;font-size:13px;font-weight:600;margin-top:20px}
+.charity-field input{font-weight:400}
+dialog .donation-description{font-size:12px;color:#28735a;line-height:1.8;margin-top:10px}
+@media(max-width:760px){header{height:auto;min-height:58px;flex-wrap:wrap;gap:10px;padding:12px 0}.header-actions{margin-left:auto}.questionnaire-label{font-size:11px}}
+
+/* 雲端存取時顯示狀態並暫停重複送出。 */
+dialog .questionnaire-status{font-size:12px;line-height:1.8;color:#28735a}
+#questionnaire-form input:disabled{opacity:.65}#close-birthday:disabled{opacity:.45;cursor:wait}
+
+/* 慈善機構使用原生下拉選單，配合生日欄位的樣式。 */
+#questionnaire-form select{display:block;width:100%;min-width:0;background:#fff;border:1px solid #cdd9c4;border-radius:8px;padding:12px 10px;font:inherit;font-weight:400;color:var(--green);margin-top:8px}
+#questionnaire-form select:focus{outline:2px solid #279b8d;outline-offset:2px}#questionnaire-form select:disabled{opacity:.65}
+
+/* 以已完成的捐贈紀錄呈現個人總額與各機構金額。 */
+.donation-card{min-width:0;border:1px solid var(--line);background:#fffef9;border-radius:15px;padding:23px}
+.donation-card-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}.donation-card-heading h2{font-size:16px}
+#refresh-donations{flex-shrink:0;border:0;background:none;padding:6px 0;color:#718469;font-size:10px}#refresh-donations:disabled{opacity:.5;cursor:wait}
+.donation-number{display:flex;align-items:baseline;gap:9px;margin-top:14px}.donation-number strong{font-size:40px;font-weight:500;overflow-wrap:anywhere;min-width:0}.donation-number>span{font-size:11px;color:#7d8974;flex-shrink:0}
+.donation-caption{font-size:10px;color:#8c9684;margin:2px 0 16px}.donation-breakdown{border-top:1px solid var(--line)}
+.donation-row{display:flex;justify-content:space-between;gap:12px;padding-top:12px;align-items:baseline;font-size:10px;line-height:1.6}.donation-row>span{color:#6e7d65}.donation-row>strong{color:#316c52;font-weight:600;text-align:right;min-width:70px;overflow-wrap:anywhere}
+.donation-status{font-size:10px;line-height:1.8;color:#77866b;margin:14px 0 0}.donation-note{font-size:9px;color:#a1a892;margin:6px 0 0}
+@media(max-width:760px){.donation-card{padding:20px}.donation-row{font-size:12px}.donation-caption,.donation-status{font-size:11px}}
+
+/* 關於泉漣以三個子欄位切換，首頁亦提供直接入口。 */
+.about-shortcuts,.about-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.about-shortcuts button{border:1px solid var(--line);border-radius:12px;background:#fffef9;text-align:left;padding:20px;color:var(--green)}
+.about-shortcuts button>span{display:block;font-size:28px;color:#279b8d;margin-bottom:14px}.about-shortcuts strong{display:block;font-size:13px}.about-shortcuts small{display:block;margin-top:8px;font-size:10px;color:var(--muted);line-height:1.8}
+.about-tabs,.wallet-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 20px}.about-tabs button,.wallet-tabs button{border:1px solid var(--line);background:#fffef9;border-radius:24px;padding:10px 18px;color:#718169}.about-tabs button.active,.wallet-tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
+.about-panel{border:1px solid var(--line);border-radius:14px;padding:28px;background:#fffef9}.about-panel>h2{font-size:23px;margin:12px 0}.about-panel p{font-size:12px;line-height:1.9;color:var(--muted)}
+.about-cards{margin-top:24px}.about-cards article{padding:22px;background:#f0f3e8;border-radius:10px}.about-cards h3{font-size:14px;margin:0 0 12px}.about-cards span{display:inline-block;background:#e1e8d5;padding:5px 9px;border-radius:5px;color:#7a8c67;font-size:10px;margin-top:12px}
+.about-report{margin-top:24px;padding:30px 20px;text-align:center;background:#f0f3e8;border-radius:10px}.about-report>span{font-size:40px;color:#279b8d}.about-report h3{font-size:16px}
+.wallet-summary{display:flex;gap:25px;color:#7a8970;font-size:12px;margin-top:24px}.wallet-summary strong{font-size:24px;margin:0 7px;color:var(--green)}
+.wallet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.owned-card{min-width:0;border:1px solid var(--line);border-radius:13px;padding:23px;background:#fffef9}.owned-type{display:inline-block;font-size:10px;color:#7b895e;background:#edf1e3;border-radius:5px;padding:5px 9px}.owned-card h2{font-size:16px;margin:17px 0 12px}.owned-card p{font-size:11px;color:var(--muted)}
+.owned-code{padding:13px;background:#f1f4e9;border-radius:8px;line-height:1.9;font-size:11px;margin:18px 0;overflow-wrap:anywhere}.owned-code strong{display:block;color:var(--green);font-size:14px;letter-spacing:1px}
+.owned-card>button,.wallet-empty button{border:1px solid #d6dfcb;border-radius:7px;background:#edf2e2;color:#597749;padding:10px 13px;font-size:12px}
+.wallet-note{font-size:11px;color:var(--muted);line-height:1.9;margin-top:22px}.wallet-empty{grid-column:1/-1;border:1px solid var(--line);border-radius:13px;background:#fffef9;padding:40px 20px;text-align:center}.wallet-empty p{font-size:12px;line-height:1.9;color:var(--muted);margin:15px 0 22px}
+@media(max-width:950px){.about-cards{grid-template-columns:1fr}}
+@media(max-width:760px){nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.nav-item{border-radius:8px;padding:12px 6px;font-size:11px}.about-shortcuts{gap:10px}.about-shortcuts button{padding:15px 12px}.about-shortcuts small{font-size:10px}.about-panel{padding:20px}.wallet-grid{grid-template-columns:1fr}.about-tabs button,.wallet-tabs button{padding:9px 13px;font-size:12px}}
+@media(max-width:420px){nav{grid-template-columns:repeat(2,minmax(0,1fr))}.about-shortcuts{grid-template-columns:1fr}.about-shortcuts button>span{float:right;margin:0}.about-shortcuts button{padding:17px}}
