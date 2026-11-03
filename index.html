@@ -8,6 +8,19 @@
 <script src="script.js" defer></script>
 </head>
 <body>
+<section id="login-screen" class="login-screen" aria-label="泉漣會員登入">
+  <div class="login-panel">
+    <div class="brand login-brand"><span class="brand-icon" aria-hidden="true"><span class="water-drop"></span><span class="water-ripple"></span></span>泉漣生鮮</div>
+    <form id="login-form">
+      <label for="login-username">帳號<input id="login-username" type="text" minlength="6" maxlength="12" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="請輸入帳號" required></label>
+      <label for="login-password">密碼<input id="login-password" type="password" minlength="6" maxlength="12" autocomplete="current-password" placeholder="請輸入密碼" required></label>
+      <p id="login-error" class="form-error" role="alert"></p>
+      <button id="login-submit" class="login-submit" type="submit">登入</button>
+    </form>
+    <button id="open-register" class="register-link" type="button">首次使用，建立帳號</button>
+  </div>
+</section>
+<div id="member-app" hidden>
 <aside class="sidebar">
 <a class="brand" href="#"><span class="brand-icon" role="img" aria-label="青綠色水滴漣漪標誌"><span class="water-drop"></span><span class="water-ripple"></span></span>泉漣生鮮</a>
 <div class="brand-sub">把每一天，過得更綠一點。</div>
@@ -20,13 +33,14 @@
 <button class="nav-item" data-page="wallet"><span>▤</span>我的兌換商品</button>
 </nav>
 <div class="sidebar-note"><span>🌱</span><strong>小小選擇，大大改變</strong><p>每一點綠色點數，都是你<br>為地球留下的溫柔足跡。</p><div class="note-line"></div><small>一起讓永續，成為日常。</small></div>
-<div class="profile"><div class="avatar">林</div><div><strong>林小青</strong><small>泉漣綠生活會員</small></div><span class="member-dot">●</span></div>
+<div class="profile"><div class="avatar" id="profile-avatar">泉</div><div><strong id="profile-display-name">會員</strong><small>泉漣綠生活會員</small></div><span class="member-dot">●</span></div>
 </aside>
 <main>
 <div id="app-error" class="app-error" role="alert" hidden></div>
 <header>
   <div class="breadcrumb">我的綠色生活 <span>／</span> <b id="page-label">點數總覽</b></div>
   <div class="header-actions">
+    <button class="logout-button" id="logout" type="button">登出</button>
     <button class="help" id="help">ⓘ <span>點數使用說明</span></button>
     <button class="questionnaire-button" id="open-questionnaire" type="button" aria-label="開啟基礎資料" aria-haspopup="dialog" aria-controls="birthday-dialog" title="基礎資料">
       <span class="questionnaire-icon" aria-hidden="true"><span></span></span>
@@ -105,14 +119,20 @@
 </section>
 <footer><span class="footer-brand"><span class="brand-icon" aria-hidden="true"><span class="water-drop"></span><span class="water-ripple"></span></span>泉漣生鮮</span><p>讓新鮮與永續，一起走進日常。</p><small>體驗版・資料僅儲存在此瀏覽器，優惠券無實際效力</small></footer>
 </main>
+</div>
 <dialog id="modal"><button class="close" aria-label="關閉">×</button><div id="modal-content"></div></dialog><div id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="birthday-dialog" aria-labelledby="birthday-title" aria-describedby="birthday-description">
   <button class="birthday-close" id="close-birthday" type="button" aria-label="關閉基礎資料">×</button>
   <span class="modal-icon" aria-hidden="true">☷</span>
   <h2 id="birthday-title">基礎資料</h2>
-  <p id="birthday-description">請填寫你的西元生日，以及希望接受消費回饋提撥 1% 捐贈的慈善機構。</p>
+  <p id="birthday-description">請填寫姓名、帳號設定、生日與欲捐贈的慈善機構。</p>
   <form id="questionnaire-form">
+    <label class="account-field" for="profile-name">姓名<input id="profile-name" type="text" maxlength="80" autocomplete="name" placeholder="請填寫姓名" required></label>
+    <label class="account-field" for="profile-username">帳號<input id="profile-username" type="text" minlength="6" maxlength="12" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="六至十二碼" required></label>
+    <label class="account-field" for="profile-password"><span id="profile-password-label">設定新密碼（選填）</span><input id="profile-password" type="password" minlength="6" maxlength="12" autocomplete="new-password" aria-describedby="credential-hint" placeholder="須同時包含英文大寫與小寫"></label>
+    <p id="credential-hint" class="credential-hint">帳號與密碼皆為 6–12 碼，可用英文字母、數字及特殊符號，不含空白。新設定密碼必須同時包含英文大寫與小寫，數字與特殊符號可自由選用。</p>
+    <label id="legacy-import-label" class="legacy-import" hidden><input id="legacy-import" type="checkbox">連結這台裝置原有的點數、兌換及問卷紀錄</label>
     <fieldset class="birthday-fields" id="birthday-fields">
       <legend>出生年月日</legend>
       <div class="birthday-inputs">
@@ -138,7 +158,7 @@
       </select>
     </label>
     <p id="donation-description" class="donation-description">消費回饋提撥比例為 1%，用於捐贈給你填寫的慈善機構。</p>
-    <p class="questionnaire-note">按下儲存後，生日與捐贈偏好將傳送至泉漣的雲端資料庫，並以此瀏覽器識別資料。實際捐款提撥功能尚待串接。</p>
+    <p class="questionnaire-note">基礎資料綁定登入帳號，儲存至泉漣雲端。密碼由身分驗證服務加密管理。實際捐款提撥功能尚待串接。</p>
     <p id="questionnaire-status" class="questionnaire-status" role="status" aria-live="polite"></p>
     <p id="questionnaire-error" class="form-error" role="alert"></p>
     <div class="modal-actions">

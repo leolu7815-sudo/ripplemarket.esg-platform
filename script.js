@@ -1,5 +1,10 @@
 // 點數存於此瀏覽器，基礎資料另存於雲端；診斷紀錄遮蔽問卷個資。
-const storageKey = '泉漣綠色點數';
+let storageKey = null;
+let currentSession = null;
+let authGeneration = 0;
+let loginTimer;
+let registering = false;
+let authBusy = false;
 const initialState = { balance: 150, generalPoints: 200, impact: 12.8, claims: {}, history: [{ title: '歡迎加入泉漣綠生活', amount: 150, date: '新會員體驗點數' }] };
 let state = clone(initialState);
 let savedSnapshot = null;
@@ -21,12 +26,16 @@ function assertState(value) {
   if (Object.values(value.claims).some(date => typeof date !== 'string')) throw new Error('任務領取紀錄格式異常，請先確認原有資料。');
   if (value.profile !== undefined && (!object(value.profile) || typeof value.profile.birthday !== 'string' || (value.profile.charity !== undefined && typeof value.profile.charity !== 'string'))) throw new Error('問卷資料格式異常，請先確認原有資料。');
 }
-function readState() {
+function readState(importLegacy = false) {
+  state = clone(initialState);
+  loadBlocked = false;
+  startupMessage = '';
   log('準備讀取裝置資料');
   try {
     savedSnapshot = localStorage.getItem(storageKey);
     const previousName = String.fromCharCode(0x9752, 0x65e5);
-    const raw = savedSnapshot === null ? localStorage.getItem(previousName + '綠色點數') : savedSnapshot;
+    const canImport = importLegacy && !localStorage.getItem('泉漣舊資料所屬帳號');
+    const raw = savedSnapshot ?? (canImport ? localStorage.getItem('泉漣綠色點數') || localStorage.getItem(previousName + '綠色點數') : null);
     if (raw === null) { log('首次使用，採用初始資料', { state }); return; }
     const loaded = JSON.parse(raw.split(previousName).join('泉漣').split('好物' + '兌換').join('適用商品範疇'));
     log('已解析裝置資料', { state: loaded });
@@ -60,6 +69,7 @@ function showError(message) {
   if (box) { box.textContent = message; box.hidden = false; }
   else { window.alert(message); }
 
+  if (!currentSession && !document.querySelector('#birthday-dialog')?.open) required('#login-error').textContent = message;
   const formError = document.querySelector('#questionnaire-error');
   if (formError && document.querySelector('#birthday-dialog')?.open) formError.textContent = message;
 }
@@ -77,6 +87,7 @@ function on(target, event, label, action) {
 }
 // 先在副本完成計算與驗證，再儲存；儲存失敗時原本的餘額不會改變。
 function commit(label, change) {
+  if (!currentSession || !storageKey) throw new Error('請先登入帳號。');
 
   if (loadBlocked) throw new Error('原有資料尚未成功載入，暫時無法變更。請先確認瀏覽器儲存權限或回報問題。');
   if (updating) throw new Error('上一筆操作尚未完成，請稍後再試。');
@@ -117,7 +128,7 @@ window.addEventListener('unhandledrejection', () => {
   showError('背景操作未完成，請檢查頁面狀態後再試。');
 });
 
-readState();
+// 登入成功後才載入該帳號的裝置資料。
 const rewards = [
   { id: 'discount', title: '泉漣購物折抵金', description: '新鮮好食，給你一點小回饋', points: 60, type: 'discount', art: '<div class="coupon-art"><small>泉漣生鮮・購物金</small><strong>30</strong><span> 元</span></div>', tag: '人氣首選' },
   { id: 'bag', title: '把綠帶著走・棉布袋', description: '可重複使用，裝下日常的美好', points: 800, type: 'goods', art: '<span class="product-emoji">🛍️</span>', tag: '永續選物' },
@@ -136,6 +147,7 @@ function notify(message) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
 }
 function showPage(page) {
+  if (!currentSession) return;
 
   if (!Object.hasOwn(labels, page)) throw new Error('找不到指定頁面，請由選單重新選擇。');
   log('切換頁面', { page });
@@ -265,67 +277,62 @@ function validBirthday(year, month, day) {
   const birthday = new Date(year, month - 1, day);
   return birthday.getFullYear() === year && birthday.getMonth() === month - 1 && birthday.getDate() === day && birthday <= new Date();
 }
-// 雲端以隨機存取碼識別此瀏覽器，原始存取碼不寫入診斷紀錄。
+// 問卷與捐贈以登入權杖識別用戶，密碼與權杖僅保留於本次記憶體。
 const charityOptions = ["台灣流浪動物救援協會","家扶基金會","台灣世界展望會","伊甸社會福利基金會","創世社會福利基金會"];
 const questionnaireUrl = 'https://qosztllyrhzdvpmyaaok.supabase.co/functions/v1/customer-questionnaire';
-const profileTokenKey = '泉漣基礎資料存取碼';
 let profileBusy = false;
-function profileToken() {
-  try {
-    let token = localStorage.getItem(profileTokenKey);
-    if (token === null) {
-      const bytes = crypto.getRandomValues(new Uint8Array(32));
-      token = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
-      localStorage.setItem(profileTokenKey, token);
-    }
-    if (!/^[0-9a-f]{64}$/.test(token)) throw new Error();
-    return token;
-  } catch { throw new Error('無法保存此裝置的問卷識別資料，請確認瀏覽器允許儲存後再試。'); }
-}
+function validCredential(value) { return typeof value === 'string' && /^[!-~]{6,12}$/.test(value); }
+function validPassword(value) { return validCredential(value) && /[A-Z]/.test(value) && /[a-z]/.test(value); }
 function setProfileBusy(busy, message) {
   profileBusy = busy;
   required('#questionnaire-status').textContent = message;
   required('#questionnaire-form').setAttribute('aria-busy', String(busy));
-  required('#birthday-fields').disabled = busy;
-  required('#charity-name').disabled = busy;
-  required('#save-profile').disabled = busy;
-  required('#cancel-birthday').disabled = busy;
-  required('#close-birthday').disabled = busy;
+  for (const id of ['profile-name','profile-username','profile-password','legacy-import','birthday-fields','charity-name','save-profile','cancel-birthday','close-birthday']) required('#' + id).disabled = busy;
   required('#save-profile').textContent = busy ? '連線中…' : '儲存至雲端';
 }
-async function requestProfile(method, profile, view = 'profile') {
-  const token = profileToken();
+async function cloudRequest(query, method = 'GET', payload, session = currentSession) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
-  log('準備連線至基礎資料雲端', { method });
+  const timer = setTimeout(() => controller.abort(), 20000);
+  const headers = { 'Content-Type': 'application/json' };
+  if (session) headers.Authorization = 'Bearer ' + session.accessToken;
+  if (payload?.importLegacy) {
+    const legacy = localStorage.getItem('泉漣基礎資料存取碼');
+    if (legacy) headers['X-Profile-Token'] = legacy;
+  }
   try {
-    const response = await fetch(questionnaireUrl + (['donations', 'news'].includes(view) ? '?view=' + view : ''), {
-      method, headers: { 'Content-Type': 'application/json', 'X-Profile-Token': token },
-      body: profile ? JSON.stringify(profile) : undefined, credentials: 'omit', cache: 'no-store', signal: controller.signal
-    });
-    log('收到基礎資料雲端回應', { method, status: response.status });
-    if (!response.ok) throw new Error('雲端暫時無法完成操作，請稍後重試。');
+    const response = await fetch(questionnaireUrl + query, { method, headers, body: payload ? JSON.stringify(payload) : undefined, credentials: 'omit', cache: 'no-store', signal: controller.signal });
     const data = await response.json();
-    if (view === 'news') {
-      if (!object(data) || !validSpotlight(data.news) || typeof data.stale !== 'boolean') throw new Error('新聞資料回應不完整。');
-      return { ...data.news, stale: data.stale };
+    if (!response.ok) {
+      if (response.status === 401 && session && currentSession === session) lockApp('登入已到期，請重新登入。');
+      throw new Error(typeof data.error === 'string' ? data.error : '雲端操作未完成，請稍後再試。');
     }
-    if (view === 'donations') {
-      if (!object(data) || !Array.isArray(data.donations)) throw new Error('捐贈紀錄回應不完整，請重試。');
-      return data.donations;
-    }
-    if (!object(data) || !Object.hasOwn(data, 'profile')) throw new Error('雲端回應不完整，請重試確認資料。');
-    if (data.profile === null && method === 'GET') return null;
-    const value = data.profile;
-    if (!object(value) || typeof value.birthday !== 'string' || typeof value.charity !== 'string' || value.donationRate !== 0.01) throw new Error('雲端資料格式異常，請稍後重試。');
-    return value;
+    return data;
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error('雲端連線逾時，請稍後重試；重試會更新同一份問卷。');
-    if (error instanceof TypeError) throw new Error('無法連線至雲端，請確認網路連線後再試。');
+    if (error.name === 'AbortError') throw new Error('雲端連線逾時，請稍後重試；若剛建立帳號，可先嘗試登入。');
+    if (error instanceof TypeError) throw new Error('無法連線至雲端，請確認網路後再試。');
     throw error;
   } finally { clearTimeout(timer); }
 }
+async function requestProfile(method, profile, view = 'profile') {
+  const session = currentSession;
+  if (view !== 'news' && !session) throw new Error('請先登入帳號。');
+  const data = await cloudRequest(['news', 'donations'].includes(view) ? '?view=' + view : '', method, profile, session);
+  if (view !== 'news' && session !== currentSession) throw new Error('登入狀態已變更，請重新開啟資料。');
+  if (view === 'news') {
+    if (!validSpotlight(data.news) || typeof data.stale !== 'boolean') throw new Error('新聞資料回應不完整。');
+    return { ...data.news, stale: data.stale };
+  }
+  if (view === 'donations') {
+    if (!Array.isArray(data.donations)) throw new Error('捐贈紀錄回應不完整。');
+    return data.donations;
+  }
+  if (!object(data.profile) || typeof data.profile.fullName !== 'string' || !validCredential(data.profile.username) || typeof data.profile.birthday !== 'string' || !charityOptions.includes(data.profile.charity) || data.profile.donationRate !== 0.01) throw new Error('基礎資料格式異常，請稍後重試。');
+  return data;
+}
 function fillProfile(profile) {
+  required('#profile-name').value = profile?.fullName || '';
+  required('#profile-username').value = profile?.username || '';
+  required('#profile-password').value = '';
   const parts = profile ? profile.birthday.split('-') : [];
   required('#birthday-year').value = parts[0] || '';
   required('#birthday-month').value = parts[1] || '';
@@ -344,49 +351,78 @@ function cacheProfile(profile) {
     localStorage.setItem(storageKey, serialized);
     savedSnapshot = serialized;
     state = next;
+    updateMemberName();
     return true;
   } catch { log('雲端資料已確認，本地快取暫時無法更新'); return false; }
 }
 async function openBirthdayQuestionnaire() {
-  if (profileBusy) return;
-  required('#birthday-year').max = new Date().getFullYear();
+  if (!currentSession || profileBusy) return;
+  registering = false;
+  prepareProfileForm();
   fillProfile(state.profile);
-  required('#questionnaire-error').textContent = '';
-  if (typeof birthdayDialog.showModal !== 'function') throw new Error('請使用較新版本的瀏覽器開啟基礎資料。');
-  if (!birthdayDialog.open) birthdayDialog.showModal();
+  birthdayDialog.showModal();
   setProfileBusy(true, '正在讀取雲端資料…');
-  let message = '讀取未完成，請稍後再開啟，或確認資料後重試儲存。';
   try {
-    const profile = await requestProfile('GET');
-    if (profile) { fillProfile(profile); cacheProfile(profile); message = '已載入雲端資料，可修改後儲存。'; }
-    else message = '尚未儲存雲端問卷，填寫後按下「儲存至雲端」。';
-  } finally { setProfileBusy(false, message); required('#birthday-year').focus(); }
+    const data = await requestProfile('GET');
+    fillProfile(data.profile);
+    cacheProfile(data.profile);
+  } finally { setProfileBusy(false, '資料綁定目前登入帳號。'); }
+}
+function prepareProfileForm() {
+  required('#birthday-year').max = new Date().getFullYear();
+  required('#birthday-title').textContent = registering ? '建立泉漣帳號' : '基礎資料';
+  required('#profile-password-label').textContent = registering ? '設定密碼' : '設定新密碼（選填）';
+  required('#profile-password').required = registering;
+  required('#legacy-import-label').hidden = !registering;
+  required('#questionnaire-error').textContent = '';
+  required('#questionnaire-status').textContent = '';
 }
 on(required('#open-questionnaire'), 'click', '開啟基礎資料', openBirthdayQuestionnaire);
-on(required('#close-birthday'), 'click', '關閉基礎資料', () => birthdayDialog.close());
-on(required('#cancel-birthday'), 'click', '稍後填寫基礎資料', () => birthdayDialog.close());
+on(required('#close-birthday'), 'click', '關閉基礎資料', () => { if (!profileBusy) birthdayDialog.close(); });
+on(required('#cancel-birthday'), 'click', '稍後填寫基礎資料', () => { if (!profileBusy) birthdayDialog.close(); });
 on(birthdayDialog, 'cancel', '等待基礎資料連線', event => { if (profileBusy) event.preventDefault(); });
 on(required('#questionnaire-form'), 'submit', '儲存基礎資料', async event => {
   event.preventDefault();
   if (!birthdayDialog.open || profileBusy) return;
+  const fullName = required('#profile-name').value.trim();
+  const username = required('#profile-username').value;
+  const password = required('#profile-password').value;
   const year = Number(required('#birthday-year').value);
   const month = Number(required('#birthday-month').value);
   const day = Number(required('#birthday-day').value);
-  const charity = required('#charity-name').value.trim();
+  const charity = required('#charity-name').value;
   const error = required('#questionnaire-error');
   error.textContent = '';
-  if (!validBirthday(year, month, day)) { error.textContent = '請輸入有效的西元出生年月日，生日不能晚於今天。'; required('#birthday-year').focus(); return; }
-  if (!charityOptions.includes(charity)) { error.textContent = '請從下拉選單選擇欲捐贈的慈善機構。'; required('#charity-name').focus(); return; }
+  if (!fullName || fullName.length > 80) { error.textContent = '請填寫姓名，最多八十個字。'; return; }
+  if (!validCredential(username)) { error.textContent = '帳號須為六至十二碼英文字母、數字或特殊符號，不含空白。'; return; }
+  if ((registering || password) && !validPassword(password)) { error.textContent = '密碼須為六至十二碼，且同時包含英文大寫與小寫。'; required('#profile-password').focus(); return; }
+  if (!validBirthday(year, month, day)) { error.textContent = '請輸入有效的西元出生年月日。'; return; }
+  if (!charityOptions.includes(charity)) { error.textContent = '請選擇欲捐贈的慈善機構。'; return; }
   const birthday = String(year) + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-  setProfileBusy(true, '正在儲存至雲端，請稍候…');
-  let message = '尚未確認雲端儲存結果，請重試確認。';
+  const payload = { fullName, username, birthday, charity, donationRate: 0.01 };
+  setProfileBusy(true, registering ? '正在建立帳號…' : '正在儲存資料…');
+  let message = '操作未完成時，可確認資料後重試。';
   try {
-    const profile = await requestProfile('PUT', { birthday, charity, donationRate: 0.01 });
-    const cached = cacheProfile(profile);
-    message = '已儲存至雲端。';
-    birthdayDialog.close();
-    notify(cached ? '基礎資料與 1% 捐贈偏好已儲存至雲端。' : '資料已儲存至雲端，本地快取未更新，下次開啟可重新讀取。');
-  } finally { setProfileBusy(false, message); }
+    if (registering) {
+      const importLegacy = required('#legacy-import').checked;
+      const generation = authGeneration;
+      const data = await cloudRequest('?action=register', 'POST', { ...payload, password, importLegacy }, null);
+      if (generation !== authGeneration) return;
+      await enterAccount(data, importLegacy);
+      birthdayDialog.close();
+      message = '帳號已建立並登入。';
+      notify(message);
+    } else {
+      const data = await requestProfile('PUT', { ...payload, ...(password ? { newPassword: password } : {}) });
+      cacheProfile(data.profile);
+      currentSession.username = data.profile.username;
+      updateMemberName();
+      if (data.notice) { error.textContent = data.notice; message = '部分資料已更新，請確認上方提示。'; return; }
+      birthdayDialog.close();
+      message = '基礎資料已儲存至雲端。';
+      notify(message);
+    }
+  } finally { required('#profile-password').value = ''; setProfileBusy(false, message); }
 });
 on(required('#help'), 'click', '開啟點數說明', () => openModal('<span class="modal-icon">🌱</span><h2>點數使用說明</h2><p>消費門市或電商之綠點標示之商品，即獲得金額8%的綠點回饋，而其他商品累積之通用點數可以1:4的方式單向轉換為綠點使用，每2點綠點相當於1元NTD可直接於商品購物使用，也可用於不定期推出之特殊品項兌換。</p><div class="modal-actions"><button class="primary" data-close>我知道了</button></div>'));
 on(modal, 'click', '關閉視窗', event => { if (event.target === modal) { const box = modal.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) modal.close(); } });
@@ -422,21 +458,23 @@ function renderDonations() {
   required('#donation-status').textContent = donationsLoading ? '正在更新捐贈紀錄…' : total === 0n ? '目前尚無已完成的捐贈紀錄。' : '已同步雲端捐贈紀錄。';
 }
 async function loadDonations() {
-  if (donationsLoading) return;
+  if (!currentSession || donationsLoading) return;
+  const generation = authGeneration;
   donationsLoading = true;
   donationError = '';
   renderDonations();
   try {
     const rows = await requestProfile('GET', undefined, 'donations');
+    if (generation !== authGeneration) return;
     donationGroups(rows);
     donationRows = rows;
   } catch {
+    if (generation !== authGeneration) return;
     donationRows = null;
     donationError = '暫時無法讀取捐贈紀錄，請確認網路後按「重新讀取」。';
     log('捐贈紀錄讀取未完成');
   } finally {
-    donationsLoading = false;
-    renderDonations();
+    if (generation === authGeneration) { donationsLoading = false; renderDonations(); }
   }
 }
 on(required('#refresh-donations'), 'click', '重新讀取捐贈紀錄', loadDonations);
@@ -545,11 +583,105 @@ async function loadSpotlight() {
   }
 }
 on(document, 'visibilitychange', '檢查新聞更新時間', () => {
-  if (!document.hidden && (!spotlightNews || spotlightNews.stale || Date.parse(spotlightNews.expires_at) <= Date.now())) return loadSpotlight();
+  if (currentSession && !document.hidden && (!spotlightNews || spotlightNews.stale || Date.parse(spotlightNews.expires_at) <= Date.now())) return loadSpotlight();
 });
 
-guard('首次顯示', render);
-guard('讀取永續新聞', loadSpotlight);
-guard('讀取捐贈紀錄', loadDonations);
-if (startupMessage) showError(startupMessage);
-
+function updateMemberName() {
+  const name = state.profile?.fullName || '會員';
+  required('#profile-display-name').textContent = name;
+  required('#profile-avatar').textContent = Array.from(name)[0];
+}
+function lockApp(message = '') {
+  authGeneration++;
+  currentSession = null;
+  storageKey = null;
+  state = clone(initialState);
+  donationRows = null;
+  donationError = '';
+  donationsLoading = false;
+  clearTimeout(loginTimer);
+  clearTimeout(newsRefreshTimer);
+  modal.close();
+  birthdayDialog.close();
+  required('#member-app').hidden = true;
+  required('#login-screen').hidden = false;
+  required('#login-password').value = '';
+  required('#profile-password').value = '';
+  required('#login-error').textContent = message;
+}
+async function enterAccount(data, importLegacy = false) {
+  if (!object(data) || typeof data.accessToken !== 'string' || !/^[0-9a-f-]{36}$/.test(data.userId) || !object(data.profile) || typeof data.profile.fullName !== 'string') throw new Error('登入回應不完整，請重新登入。');
+  authGeneration++;
+  currentSession = { accessToken: data.accessToken, userId: data.userId, username: data.profile.username };
+  storageKey = '泉漣會員點數：' + data.userId;
+  readState(importLegacy);
+  const cached = cacheProfile(data.profile);
+  if (importLegacy && cached) {
+    try { localStorage.setItem('泉漣舊資料所屬帳號', data.userId); }
+    catch { log('裝置暫時無法記錄舊資料連結狀態'); }
+  }
+  donationRows = null;
+  donationError = '';
+  donationsLoading = false;
+  walletFilter = 'all';
+  currentFilter = 'all';
+  required('#login-password').value = '';
+  required('#member-app').hidden = false;
+  required('#login-screen').hidden = true;
+  required('#app-error').hidden = true;
+  render();
+  updateMemberName();
+  showPage('home');
+  clearTimeout(loginTimer);
+  const remaining = Number(data.expiresAt) * 1000 - Date.now();
+  loginTimer = setTimeout(() => lockApp('登入已到期，請重新登入。'), Number.isFinite(remaining) && remaining > 0 ? remaining : 3600000);
+  guard('讀取捐贈紀錄', loadDonations);
+  guard('讀取永續新聞', loadSpotlight);
+  if (startupMessage) showError(startupMessage);
+}
+on(required('#login-form'), 'submit', '會員登入', async event => {
+  event.preventDefault();
+  if (authBusy) return;
+  const username = required('#login-username').value;
+  const password = required('#login-password').value;
+  if (!validCredential(username) || !validCredential(password)) { required('#login-error').textContent = '帳號與密碼須為六至十二碼英文字母、數字或特殊符號，不含空白。'; return; }
+  authBusy = true;
+  required('#login-submit').disabled = true;
+  required('#open-register').disabled = true;
+  required('#login-submit').textContent = '登入中…';
+  required('#login-error').textContent = '';
+  try {
+    const generation = authGeneration;
+    const data = await cloudRequest('?action=login', 'POST', { username, password }, null);
+    if (generation !== authGeneration) return;
+    await enterAccount(data);
+  } finally {
+    authBusy = false;
+    required('#login-submit').disabled = false;
+    required('#open-register').disabled = false;
+    required('#login-submit').textContent = '登入';
+    required('#login-password').value = '';
+  }
+});
+on(required('#open-register'), 'click', '建立會員帳號', () => {
+  if (authBusy || profileBusy) return;
+  registering = true;
+  prepareProfileForm();
+  fillProfile(null);
+  const canImport = !localStorage.getItem('泉漣舊資料所屬帳號') && Boolean(localStorage.getItem('泉漣綠色點數'));
+  required('#legacy-import').disabled = !canImport;
+  required('#legacy-import').checked = canImport;
+  birthdayDialog.showModal();
+  required('#profile-name').focus();
+});
+on(required('#logout'), 'click', '會員登出', async () => {
+  const session = currentSession;
+  lockApp();
+  required('#login-username').value = '';
+  if (session) {
+    try { await cloudRequest('?action=logout', 'POST', {}, session); }
+    catch { log('已離開本次登入，雲端登出通知暫時未完成'); }
+  }
+});
+window.addEventListener('pageshow', event => { if (event.persisted) lockApp(); });
+lockApp();
