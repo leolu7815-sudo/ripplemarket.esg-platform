@@ -137,3 +137,16 @@ dialog .questionnaire-status{font-size:12px;line-height:1.8;color:#28735a}
 .page-title .news-status{font-size:11px;line-height:1.8;color:#89947e;margin:0}
 @media(max-width:1200px){.page-title{flex-wrap:wrap}.news-slot{max-width:none}.page-title-copy{flex-shrink:1}.news-copy strong{font-size:12px}.date-badge{display:none}}
 @media(max-width:760px){.page-title{gap:14px}.page-title-copy{width:100%}.news-slot{flex-basis:100%;margin-left:0}.news-spotlight{padding:2px 0}.news-copy strong{font-size:13px}.news-copy>span{font-size:10px}}
+
+/* 登入入口只呈現品牌與帳密表單，成功後才顯示會員頁。 */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px 22px;background:#f1f6eb}
+.login-panel{width:100%;max-width:360px}.login-brand{justify-content:center;margin-bottom:42px;font-size:30px}
+#login-form label,.account-field{display:block;font-size:13px;font-weight:600;margin-top:18px}
+#login-form input{display:block;width:100%;margin-top:9px;border:1px solid #cbdcc2;background:#fffef9;padding:14px;border-radius:8px;font:inherit;color:var(--green)}
+#login-form input:focus{outline:2px solid #279b8d;outline-offset:2px}
+.login-submit{width:100%;border:0;border-radius:8px;padding:14px;margin-top:24px;color:#fff;background:var(--green);font-size:14px}
+.login-submit:disabled{opacity:.6;cursor:wait}.register-link{display:block;margin:20px auto 0;background:none;border:0;color:#6c865c;font-size:12px;padding:8px}
+#login-error{font-size:12px;color:#ac5b3f;line-height:1.8}.logout-button{border:0;background:none;color:#7b8a71;font-size:11px;padding:8px 0}
+.account-field input{font-weight:400}.credential-hint{font-size:11px!important;line-height:1.8;color:#87957a}.legacy-import{display:flex;align-items:flex-start;gap:8px;font-size:11px;line-height:1.8;color:#6b8059;margin:17px 0}
+#questionnaire-form #legacy-import{width:16px;flex-shrink:0;margin:2px 0 0;padding:0;accent-color:#326b4d}
+#birthday-dialog{max-height:calc(100vh - 40px);overflow-y:auto}
